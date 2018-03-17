@@ -498,3 +498,17 @@ var Lang = {
         return string;
     }
 };
+
+jquery(document).ready(function() {
+    jquery('#delete-build').on('click', function (e) {
+        e.preventDefault();
+
+        var buildId   = this.data('buildId');
+        var projectId = this.data('projectId');
+
+        confirmDelete(APP_URL + 'build/delete/' + buildId)
+            .onCloseConfirmed = function () {
+                window.location = APP_URL + 'project/view/' + projectId;
+            };
+    });
+});

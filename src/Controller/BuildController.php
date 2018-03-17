@@ -10,6 +10,7 @@ use PHPCensor\Helper\AnsiConverter;
 use PHPCensor\Helper\Lang;
 use PHPCensor\Http\Response\RedirectResponse;
 use PHPCensor\Model\Build;
+use PHPCensor\Model\Project;
 use PHPCensor\Model\User;
 use PHPCensor\Service\BuildService;
 use PHPCensor\WebController;
@@ -47,8 +48,6 @@ class BuildController extends WebController
     }
 
     /**
-     * View a specific build.
-     *
      * @param integer $buildId
      *
      * @throws NotFoundException
@@ -138,6 +137,77 @@ class BuildController extends WebController
 
         if ($this->currentUserIsAdmin()) {
             $actions .= " <a class=\"btn btn-danger\" id=\"delete-build\" href=\"{$deleteLink}\">{$delete}</a>";
+        }
+
+        $this->layout->actions = $actions;
+    }
+
+    /**
+     * @param integer $buildId
+     *
+     * @throws NotFoundException
+     */
+    public function viewLog($buildId)
+    {
+        $build = BuildFactory::getBuildById($buildId);
+
+        if (!$build) {
+            throw new NotFoundException(Lang::get('build_x_not_found', $buildId));
+        }
+
+        /** @var Project $project */
+        $project = Factory::getStore('Project')->getByPrimaryKey($build->getProjectId());
+
+        /** @var \PHPCensor\Store\BuildErrorStore $errorStore */
+        $errorStore = Factory::getStore('BuildError');
+
+        $this->view->build       = $build;
+        $this->view->totalErrors = $errorStore->getErrorTotalForBuild($build->getId());
+
+        $this->layout->title = Lang::get('build_n', $buildId);
+        $this->layout->subtitle = $build->getProjectTitle();
+
+        switch ($build->getStatus()) {
+            case 0:
+                $this->layout->skin = 'blue';
+                break;
+
+            case 1:
+                $this->layout->skin = 'yellow';
+                break;
+
+            case 2:
+                $this->layout->skin = 'green';
+                break;
+
+            case 3:
+                $this->layout->skin = 'red';
+                break;
+        }
+
+        $rebuildLabel = Lang::get('rebuild_now');
+        $rebuildLink  = APP_URL . 'build/rebuild/' . $build->getId();
+
+        $deleteLabel = Lang::get('delete_build');
+        $deleteLink  = APP_URL . 'build/delete/' . $build->getId();
+
+        $actions = '';
+        if (!$project->getArchived()) {
+            $actions .= sprintf(
+                '<a class="btn btn-default" href="%s">%s</a>',
+                $rebuildLink,
+                $rebuildLabel
+            );
+        }
+
+        if ($this->currentUserIsAdmin()) {
+            $actions .= sprintf(
+                '<a class="btn btn-danger" id="delete-build" data-build-id="%s" data-project-id="%s" href="%s">%s</a>',
+                $build->getId(),
+                $build->getProjectId(),
+                $deleteLink,
+                $deleteLabel
+            );
         }
 
         $this->layout->actions = $actions;

@@ -1,0 +1,205 @@
+<?php
+
+use PHPCensor\Helper\Lang;
+use PHPCensor\Model\Build;
+use PHPCensor\Helper\AnsiConverter;
+
+/**
+ * @var Build   $build
+ * @var integer $totalErrors
+ */
+
+?>
+
+<div class="row">
+    <div class="col-sm-4">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">
+                    <?= Lang::get('build_details'); ?>
+                </h3>
+            </div>
+
+            <div class="box-body no-padding">
+                <table class="table">
+                    <tr>
+                        <th><?= Lang::get('project'); ?></th>
+                        <td style="text-align: right">
+                            <a href="<?= APP_URL . 'project/view/' . $build->getProjectId(); ?>">
+                                <i class="fa fa-<?= $build->getProject()->getIcon(); ?>"></i>
+                                <?= $build->getProject()->getTitle(); ?>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('branch'); ?></th>
+                        <td style="text-align: right">
+                            <?php if (Build::SOURCE_WEBHOOK_PULL_REQUEST === $build->getSource()): ?>
+                                <a href="<?= $build->getRemoteBranchLink(); ?>">
+                                    <i class="fa fa-code-fork"></i>
+                                    <?= $build->getRemoteBranch(); ?> :
+                                </a>
+                            <?php endif; ?>
+                            <a href="<?= $build->getBranchLink(); ?>">
+                                <i class="fa fa-code-fork"></i>
+                                <?= $build->getBranch(); ?>
+                            </a>
+                            <?php if ($tag = $build->getTag()): ?> /
+                                <a href="<?= $build->getTagLink(); ?>">
+                                    <i class="fa fa-tag"></i> <?= $tag; ?>
+                                </a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('environment'); ?></th>
+                        <td style="text-align: right">
+                            <?php
+                                $environment = $build->getEnvironment();
+                                echo !empty($environment) ? ('<i class="fa fa-gear"> ' . $environment) : '—' ;
+                            ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('merged_branches'); ?></th>
+                        <td style="text-align: right">
+                            <a href="<?= $build->getBranchLink(); ?>">
+                                <i class="fa fa-code-fork"></i> <?= $build->getBranch(); ?>
+                            </a>
+                            + <?php
+                            $branches = $build->getExtra('branches');
+                            if (!empty($branches)) {
+                                foreach($branches as $branch) {
+                                    ?><i class="fa fa-code-fork"></i> <?= $branch ?><?php
+                                }
+                            } else {
+                                ?>&mdash;<?php
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">
+                    <?= Lang::get('commit_details'); ?>
+                </h3>
+            </div>
+
+            <div class="box-body no-padding">
+                <table class="table">
+                    <tr>
+                        <th><?= Lang::get('build_source'); ?></th>
+                        <td style="text-align: right">
+                            <?= Lang::get($build->getSourceHumanize()); ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?= Lang::get('commit'); ?></th>
+                        <td style="text-align: right">
+                            <a href="<?= $build->getCommitLink(); ?>">
+                                <?= substr($build->getCommitId(), 0, 7); ?>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('committer'); ?></th>
+                        <td style="text-align: right">
+                            <?= $build->getCommitterEmail(); ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('commit_message'); ?></th>
+                        <td style="text-align: right">
+                            <?= htmlspecialchars($build->getCommitMessage()); ?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">
+                    <?= Lang::get('timing'); ?>
+                </h3>
+            </div>
+
+            <div class="box-body no-padding">
+                <table class="table">
+                    <tr>
+                        <th><?= Lang::get('created'); ?></th>
+                        <td style="text-align: right" class="build-created datetime">
+                            <?= ($build->getCreateDate() ? $build->getCreateDate()->format('Y-m-d H:i:s') : ''); ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('started'); ?></th>
+                        <td style="text-align: right" class="build-started datetime">
+                            <?= ($build->getStartDate() ? $build->getStartDate()->format('Y-m-d H:i:s') : ''); ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('finished'); ?></th>
+                        <td style="text-align: right" class="build-finished datetime">
+                            <?= ($build->getFinishDate() ? $build->getFinishDate()->format('Y-m-d H:i:s') : ''); ?>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th><?= Lang::get('duration'); ?></th>
+                        <td style="text-align: right" class="build-duration duration">
+                            <?= $build->getDuration(); ?> <?= Lang::get('seconds'); ?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs">
+        <li class="active">
+            <a href="#">
+                <i class="fa fa-cogs"></i> <?= Lang::get('build_log'); ?>
+            </a>
+        </li>
+        <li class="">
+            <a href="<?= APP_URL . 'build/viewErrors/' . $build->getProjectId(); ?>">
+                <i class="fa fa-exclamation-triangle"></i> <?= Lang::get('errors'); ?>
+                <?php if (!$totalErrors): ?>
+                    <span class="errors-label label label-danger" style="display: none">0</span>
+                <?php else: ?>
+                    <span class="errors-label label label-danger"><?= $totalErrors; ?></span>
+                <?php endif; ?>
+            </a>
+        </li>
+        <li class="">
+            <a href="<?= APP_URL . 'build/viewInformation/' . $build->getProjectId(); ?>">
+                <i class="fa fa-info-circle"></i>  <?= Lang::get('information'); ?>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active">
+            <pre style="overflow-y: visible; white-space: pre-wrap"><?= AnsiConverter::convert($build->getLog()); ?></pre>
+        </div>
+    </div>
+</div>

@@ -21,7 +21,9 @@ foreach ($errors as $error):
    <tr>
        <td>
            <?php if ($error->getIsNew()): ?>
-               <span class="label label-danger"><?= Lang::get('new'); ?></span>
+               <span class="label label-danger">
+                   <?= Lang::get('new'); ?>
+               </span>
            <?php endif; ?>
        </td>
        <td>
@@ -29,19 +31,25 @@ foreach ($errors as $error):
                <?= Lang::get($error->getSeverityString()); ?>
            </span>
        </td>
-       <td><?= Lang::get($error->getPlugin()); ?></td>
-       <td><a href="<?= $link; ?>"><?= $error->getFile(); ?></a></td>
+       <td>
+           <?= Lang::get($error->getPlugin()); ?>
+       </td>
        <td>
            <a href="<?= $link; ?>">
-           <?php
-           if ($error->getLineStart() == $error->getLineEnd() || !$error->getLineEnd()) {
-               echo $error->getLineStart();
-           } else {
-               echo ($error->getLineStart() . ' - ' . $error->getLineEnd());
-           }
-           ?>
+               <?= $error->getFile(); ?>
            </a>
        </td>
-       <td class="visible-line-breaks"><?= htmlspecialchars(trim($error->getMessage())); ?></td>
+       <td>
+           <a href="<?= $link; ?>">
+           <?php if ($error->getLineStart() == $error->getLineEnd() || !$error->getLineEnd()): ?>
+               <?= $error->getLineStart(); ?>
+           <?php else: ?>
+               <?= ($error->getLineStart() . ' - ' . $error->getLineEnd()); ?>
+           <?php endif; ?>
+           </a>
+       </td>
+       <td class="visible-line-breaks">
+           <?= htmlspecialchars(trim($error->getMessage())); ?>
+       </td>
    </tr>
 <?php endforeach; ?>
